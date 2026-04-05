@@ -18,7 +18,7 @@ interface NavItem {
 interface NavbarProps {
   user?: {
     name: string
-    avatarUrl?: string
+    avatarUrl?: string | null
   } | null
 }
 

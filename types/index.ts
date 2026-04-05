@@ -40,7 +40,7 @@ export interface Prediction {
 export interface User {
   id: string
   username: string
-  avatarUrl?: string
+  avatarUrl?: string | null
   points: number
   rank: number
   badges: Badge[]
