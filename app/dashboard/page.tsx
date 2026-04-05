@@ -1,19 +1,23 @@
 /**
  * Dashboard Page - Vue principale pour les utilisateurs connectés
  * Prochain GP, prédictions, rang, badges et activité de la ligue
+ * Utilise OpenF1 pour les données du prochain GP
  */
 import { Navbar, Card, CardHeader, Avatar, Button } from '@/components/ui'
 import { Countdown } from '@/components/features/countdown'
 import { 
   currentUser, 
-  nextGrandPrix, 
   currentPredictions, 
   leagueActivity,
   getDriverName
 } from '@/lib/mock-data'
+import { getNextMeeting } from '@/lib/openf1'
 import Link from 'next/link'
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  // Récupère le prochain GP depuis l'API OpenF1
+  const nextGP = await getNextMeeting()
+  
   return (
     <>
       <Navbar user={{ name: currentUser.username, avatarUrl: currentUser.avatarUrl }} />
@@ -38,21 +42,21 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                   <div>
                     <p className="text-text-secondary text-sm">Prochain Grand Prix</p>
-                    <h2 className="text-xl font-bold text-foreground">{nextGrandPrix.name}</h2>
-                    <p className="text-text-muted text-sm">{nextGrandPrix.circuit} • {nextGrandPrix.country}</p>
+                    <h2 className="text-xl font-bold text-foreground">{nextGP?.meeting_name || 'Chargement...'}</h2>
+                    <p className="text-text-muted text-sm">{nextGP?.circuit_short_name} • {nextGP?.country_name}</p>
                   </div>
                   <Link href="/predictions">
                     <Button>Faire mes prédictions</Button>
                   </Link>
                 </div>
-                <Countdown targetDate={nextGrandPrix.date} label="Deadline des prédictions" />
+                {nextGP && <Countdown targetDate={nextGP.date_start} label="Deadline des prédictions" />}
               </Card>
 
               {/* Mes prédictions en cours */}
               <Card>
                 <CardHeader 
                   title="Mes prédictions en cours" 
-                  description={`Pour le ${nextGrandPrix.name}`}
+                  description={`Pour le ${nextGP?.meeting_name || 'prochain GP'}`}
                 />
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <PredictionBlock 

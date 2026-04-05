@@ -1,12 +1,14 @@
 /**
  * Landing Page - Page d'accueil pour les visiteurs non connectés
  * Hero, features, countdown et teaser du leaderboard
+ * Utilise les données OpenF1 pour le prochain GP
  */
 import { Button, Navbar } from '@/components/ui'
 import { Countdown } from '@/components/features/countdown'
 import { FeatureCard } from '@/components/features/feature-card'
 import { LeaderboardTeaser } from '@/components/features/leaderboard-teaser'
-import { nextGrandPrix, globalLeaderboard } from '@/lib/mock-data'
+import { globalLeaderboard } from '@/lib/mock-data'
+import { getNextMeeting } from '@/lib/openf1'
 import Link from 'next/link'
 
 const features = [
@@ -27,7 +29,9 @@ const features = [
   },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Récupère le prochain GP depuis l'API OpenF1
+  const nextGP = await getNextMeeting()
   return (
     <>
       <Navbar user={null} />
@@ -91,13 +95,19 @@ export default function HomePage() {
                 <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                   Prochain Grand Prix
                 </h2>
-                <p className="text-primary font-semibold text-lg mb-8">
-                  🏁 {nextGrandPrix.name}
-                </p>
-                <Countdown 
-                  targetDate={nextGrandPrix.date} 
-                  label={`${nextGrandPrix.circuit} • ${nextGrandPrix.country}`}
-                />
+                {nextGP ? (
+                  <>
+                    <p className="text-primary font-semibold text-lg mb-8">
+                      🏁 {nextGP.meeting_name}
+                    </p>
+                    <Countdown 
+                      targetDate={nextGP.date_start} 
+                      label={`${nextGP.circuit_short_name} • ${nextGP.country_name}`}
+                    />
+                  </>
+                ) : (
+                  <p className="text-text-secondary">Chargement...</p>
+                )}
                 <div className="mt-8">
                   <Link href="/predictions">
                     <Button variant="primary">
