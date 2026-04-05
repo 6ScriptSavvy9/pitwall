@@ -160,7 +160,7 @@ export default async function HomePage() {
               <span className="text-foreground">Wall</span>
             </div>
             <p className="text-text-secondary text-sm">
-              © 2025 PitWall. Fait avec ❤️ pour les fans de F1.
+              © 2026 PitWall. Fait avec ❤️ pour les fans de F1.
             </p>
           </div>
         </div>

@@ -25,8 +25,8 @@ interface NavbarProps {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Prédictions', href: '/predictions' },
+  { label: 'Classement F1', href: '/standings' },
   { label: 'Leaderboard', href: '/leaderboard' },
-  { label: 'Ma Ligue', href: '/league' },
 ]
 
 export function Navbar({ user }: NavbarProps) {

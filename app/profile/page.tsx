@@ -1,35 +1,19 @@
 /**
  * Profile Page - Profil utilisateur avec stats, badges et historique
+ * Utilise OpenF1 pour les résultats des courses passées
  */
 import { Navbar, Card, CardHeader, Avatar, Badge } from '@/components/ui'
-import { currentUser, badges, grandsPrix, getDriverName } from '@/lib/mock-data'
+import { currentUser, badges } from '@/lib/mock-data'
+import { getPastRaces, getRaceWinnerAndPole, type RaceResult } from '@/lib/openf1'
 
-// Historique de prédictions mocké
-const predictionHistory = [
-  {
-    gpId: 'aus-2025',
-    gpName: 'GP d\'Australie',
-    winner: { predicted: 'ver', actual: 'nor', correct: false },
-    pole: { predicted: 'ver', actual: 'ver', correct: true },
-    points: 15,
-  },
-  {
-    gpId: 'chn-2025',
-    gpName: 'GP de Chine',
-    winner: { predicted: 'nor', actual: 'nor', correct: true },
-    pole: { predicted: 'lec', actual: 'nor', correct: false },
-    points: 25,
-  },
-  {
-    gpId: 'jpn-2025',
-    gpName: 'GP du Japon',
-    winner: { predicted: 'ver', actual: 'ver', correct: true },
-    pole: { predicted: 'ver', actual: 'ver', correct: true },
-    points: 40,
-  },
-]
+interface PastRaceResult {
+  meetingKey: number
+  meetingName: string
+  winner: RaceResult | null
+  pole: RaceResult | null
+}
 
-// Stats calculées
+// Stats calculées (mockées - nécessite Supabase pour les vraies stats)
 const stats = {
   totalPoints: currentUser.points,
   totalPredictions: 18,
@@ -41,7 +25,35 @@ const stats = {
   bestStreak: 3,
 }
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  // Récupérer les courses passées depuis OpenF1
+  const pastRaces = await getPastRaces(2026)
+  
+  // Récupérer seulement les 3 dernières courses pour éviter les rate limits
+  const recentRaces = pastRaces.slice(-3).reverse()
+  
+  // Récupérer les résultats un par un avec try/catch pour la robustesse
+  const raceResults: PastRaceResult[] = []
+  for (const race of recentRaces) {
+    try {
+      const { winner, pole } = await getRaceWinnerAndPole(race.meeting_key)
+      raceResults.push({
+        meetingKey: race.meeting_key,
+        meetingName: race.meeting_name,
+        winner,
+        pole,
+      })
+    } catch {
+      // En cas d'erreur, ajouter quand même la course sans résultats
+      raceResults.push({
+        meetingKey: race.meeting_key,
+        meetingName: race.meeting_name,
+        winner: null,
+        pole: null,
+      })
+    }
+  }
+  
   return (
     <>
       <Navbar user={{ name: currentUser.username, avatarUrl: currentUser.avatarUrl }} />
@@ -74,7 +86,7 @@ export default function ProfilePage() {
             <div className="lg:col-span-2 space-y-6">
               {/* Statistiques */}
               <Card>
-                <CardHeader title="📊 Statistiques" description="Saison 2025" />
+                <CardHeader title="📊 Statistiques" description="Saison 2026" />
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <StatBlock label="Points totaux" value={stats.totalPoints.toString()} />
                   <StatBlock label="Prédictions" value={`${stats.correctPredictions}/${stats.totalPredictions}`} />
@@ -95,35 +107,44 @@ export default function ProfilePage() {
                 </div>
               </Card>
 
-              {/* Historique des prédictions */}
+              {/* Résultats des courses récentes (vrais résultats OpenF1) */}
               <Card>
-                <CardHeader title="📜 Historique des prédictions" />
+                <CardHeader title="🏁 Résultats récents" description="Données en direct depuis OpenF1" />
                 <div className="space-y-4">
-                  {predictionHistory.map((prediction) => (
-                    <div 
-                      key={prediction.gpId} 
-                      className="bg-surface-hover rounded-lg p-4"
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <h4 className="font-semibold text-foreground">{prediction.gpName}</h4>
-                        <span className="text-primary font-bold">+{prediction.points} pts</span>
+                  {raceResults.length === 0 ? (
+                    <p className="text-text-muted text-center py-4">
+                      Aucune course terminée cette saison
+                    </p>
+                  ) : (
+                    raceResults.map((race) => (
+                      <div 
+                        key={race.meetingKey} 
+                        className="bg-surface-hover rounded-lg p-4"
+                      >
+                        <h4 className="font-semibold text-foreground mb-3">{race.meetingName}</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-text-secondary">🏆 Vainqueur</p>
+                            <p className="text-foreground font-medium">
+                              {race.winner?.driverName || 'Non disponible'}
+                            </p>
+                            {race.winner && (
+                              <p className="text-text-muted text-xs">{race.winner.teamName}</p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-text-secondary">⚡ Pole Position</p>
+                            <p className="text-foreground font-medium">
+                              {race.pole?.driverName || 'Non disponible'}
+                            </p>
+                            {race.pole && (
+                              <p className="text-text-muted text-xs">{race.pole.teamName}</p>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <PredictionResult 
-                          label="Vainqueur"
-                          predicted={getDriverName(prediction.winner.predicted)}
-                          actual={getDriverName(prediction.winner.actual)}
-                          correct={prediction.winner.correct}
-                        />
-                        <PredictionResult 
-                          label="Pole"
-                          predicted={getDriverName(prediction.pole.predicted)}
-                          actual={getDriverName(prediction.pole.actual)}
-                          correct={prediction.pole.correct}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </Card>
             </div>
@@ -182,38 +203,6 @@ function StatBlock({ label, value }: { label: string; value: string }) {
     <div className="text-center">
       <p className="text-2xl font-bold text-foreground">{value}</p>
       <p className="text-xs text-text-secondary mt-1">{label}</p>
-    </div>
-  )
-}
-
-/**
- * PredictionResult - Résultat d'une prédiction
- */
-function PredictionResult({ 
-  label, 
-  predicted, 
-  actual, 
-  correct 
-}: { 
-  label: string
-  predicted: string
-  actual: string
-  correct: boolean 
-}) {
-  return (
-    <div>
-      <p className="text-text-secondary">{label}</p>
-      <div className="flex items-center gap-2">
-        <span className={correct ? 'text-success' : 'text-danger'}>
-          {correct ? '✓' : '✗'}
-        </span>
-        <span className="text-foreground">{predicted}</span>
-        {!correct && (
-          <span className="text-text-muted text-xs">
-            (était: {actual})
-          </span>
-        )}
-      </div>
     </div>
   )
 }
