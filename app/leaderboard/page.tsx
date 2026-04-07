@@ -4,7 +4,7 @@
  * Utilise OpenF1 pour le calendrier des courses
  */
 import { Navbar, Card, CardHeader, Button } from '@/components/ui'
-import { getMeetings } from '@/lib/openf1'
+import { getMeetingsWithFallback } from '@/lib/openf1'
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -18,8 +18,14 @@ export default async function LeaderboardPage() {
     redirect('/login')
   }
 
+  // Nom d'affichage et avatar Google
+  const displayName = user.user_metadata?.full_name?.split(' ')[0] 
+    || user.email?.split('@')[0] 
+    || 'Utilisateur'
+  const avatarUrl = user.user_metadata?.avatar_url || null
+
   // Récupérer le vrai calendrier F1 depuis OpenF1
-  const meetings = await getMeetings(2026)
+  const { meetings, year } = await getMeetingsWithFallback()
   
   // Ne garder que les courses passées pour les filtres
   const now = new Date()
@@ -27,7 +33,7 @@ export default async function LeaderboardPage() {
   
   return (
     <>
-      <Navbar user={{ name: user.email?.split('@')[0] || 'Utilisateur', avatarUrl: null }} />
+      <Navbar user={{ name: displayName, avatarUrl }} />
       
       <main className="flex-1 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,7 +43,7 @@ export default async function LeaderboardPage() {
               🏆 Classement
             </h1>
             <p className="text-text-secondary mt-1">
-              Saison 2026 • {pastMeetings.length} course{pastMeetings.length > 1 ? 's' : ''} terminée{pastMeetings.length > 1 ? 's' : ''}
+              Saison {year} • {pastMeetings.length} course{pastMeetings.length > 1 ? 's' : ''} terminée{pastMeetings.length > 1 ? 's' : ''}
             </p>
           </div>
 

@@ -81,6 +81,23 @@ export async function getMeetings(year: number = 2026): Promise<OpenF1Meeting[]>
 }
 
 /**
+ * Récupère les meetings avec fallback sur l'année précédente si pas de données
+ */
+export async function getMeetingsWithFallback(): Promise<{ meetings: OpenF1Meeting[], year: number }> {
+  const currentYear = new Date().getFullYear()
+  
+  // Essayer l'année courante
+  let meetings = await getMeetings(currentYear)
+  if (meetings.length > 0) {
+    return { meetings, year: currentYear }
+  }
+  
+  // Fallback sur l'année précédente
+  meetings = await getMeetings(currentYear - 1)
+  return { meetings, year: currentYear - 1 }
+}
+
+/**
  * Récupère les sessions d'un meeting spécifique
  */
 export async function getSessions(meetingKey: number): Promise<OpenF1Session[]> {
@@ -99,7 +116,7 @@ export async function getLatestSession(): Promise<OpenF1Session | null> {
  * Récupère le prochain Grand Prix (le premier dont la date est dans le futur)
  */
 export async function getNextMeeting(): Promise<OpenF1Meeting | null> {
-  const meetings = await getMeetings(2026)
+  const { meetings } = await getMeetingsWithFallback()
   const now = new Date()
   
   const upcoming = meetings.find(m => new Date(m.date_end) > now)
@@ -171,10 +188,13 @@ export async function getFastestLapDriver(sessionKey: number): Promise<number | 
 }
 
 /**
- * Récupère les courses passées avec leurs résultats
+ * Récupère les courses passées avec leurs résultats (avec fallback automatique)
  */
-export async function getPastRaces(year: number = 2026): Promise<OpenF1Meeting[]> {
-  const meetings = await getMeetings(year)
+export async function getPastRaces(year?: number): Promise<OpenF1Meeting[]> {
+  const { meetings, year: actualYear } = year 
+    ? { meetings: await getMeetings(year), year } 
+    : await getMeetingsWithFallback()
+  
   const now = new Date()
   
   // Retourner les courses terminées (date_end dans le passé)
@@ -445,18 +465,21 @@ export async function getConstructorStandings(year: number = 2026): Promise<Cons
 
 /**
  * Récupère un résumé rapide du championnat (top 3 pilotes, top 3 constructeurs)
- * Optimisé pour éviter trop d'appels API
+ * Optimisé pour éviter trop d'appels API - avec fallback automatique sur l'année
  */
-export async function getChampionshipSummary(year: number = 2026): Promise<{
+export async function getChampionshipSummary(year?: number): Promise<{
   drivers: DriverStanding[]
   constructors: ConstructorStanding[]
   racesCompleted: number
   totalRaces: number
+  year: number
 }> {
-  const [allMeetings, driverStandings] = await Promise.all([
-    getMeetings(year),
-    getDriverStandings(year)
-  ])
+  // Utiliser le fallback si pas d'année spécifiée
+  const { meetings: allMeetings, year: actualYear } = year 
+    ? { meetings: await getMeetings(year), year }
+    : await getMeetingsWithFallback()
+  
+  const driverStandings = await getDriverStandings(actualYear)
   
   const now = new Date()
   const completedRaces = allMeetings.filter(m => 
@@ -501,6 +524,7 @@ export async function getChampionshipSummary(year: number = 2026): Promise<{
     drivers: driverStandings,
     constructors: constructorStandings,
     racesCompleted: completedRaces,
-    totalRaces
+    totalRaces,
+    year: actualYear
   }
 }

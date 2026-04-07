@@ -12,12 +12,14 @@ interface PredictionsFormProps {
   drivers: OpenF1Driver[]
   nextGP: OpenF1Meeting | null
   userName: string
+  userAvatar: string | null
 }
 
 export function PredictionsForm({ 
   drivers, 
   nextGP, 
-  userName
+  userName,
+  userAvatar
 }: PredictionsFormProps) {
   // État local pour les prédictions (vide par défaut)
   const [predictions, setPredictions] = useState({
@@ -41,7 +43,7 @@ export function PredictionsForm({
 
   return (
     <>
-      <Navbar user={{ name: userName, avatarUrl: null }} />
+      <Navbar user={{ name: userName, avatarUrl: userAvatar }} />
       
       <main className="flex-1 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

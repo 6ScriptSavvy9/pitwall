@@ -22,23 +22,31 @@ export default async function DashboardPage() {
 
   // Récupère le prochain GP et le classement depuis l'API OpenF1
   const [nextGP, championship] = await Promise.all([
-    getNextMeeting(),
-    getChampionshipSummary(2026).catch(() => null)
+    getNextMeeting().catch(() => null),
+    getChampionshipSummary().catch(() => null)
   ])
+
+  // Nom d'affichage : prénom Google ou email
+  const displayName = user.user_metadata?.full_name?.split(' ')[0] 
+    || user.email?.split('@')[0] 
+    || 'Utilisateur'
   
   return (
     <>
-      <Navbar user={{ name: user.email?.split('@')[0] || 'Utilisateur', avatarUrl: null }} />
+      <Navbar user={{ 
+        name: displayName, 
+        avatarUrl: user.user_metadata?.avatar_url || null 
+      }} />
       
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Bienvenue, {user.email?.split('@')[0]} 👋
+              Bienvenue, {displayName} 👋
             </h1>
             <p className="text-text-secondary mt-1">
-              Voici ton tableau de bord pour la saison 2026
+              Voici ton tableau de bord pour la saison {championship?.year || new Date().getFullYear()}
             </p>
           </div>
 
@@ -50,8 +58,14 @@ export default async function DashboardPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                   <div>
                     <p className="text-text-secondary text-sm">Prochain Grand Prix</p>
-                    <h2 className="text-xl font-bold text-foreground">{nextGP?.meeting_name || 'Chargement...'}</h2>
-                    <p className="text-text-muted text-sm">{nextGP?.circuit_short_name} • {nextGP?.country_name}</p>
+                    <h2 className="text-xl font-bold text-foreground">
+                      {nextGP?.meeting_name || 'Aucun GP prévu'}
+                    </h2>
+                    {nextGP && (
+                      <p className="text-text-muted text-sm">
+                        {nextGP.circuit_short_name} • {nextGP.country_name}
+                      </p>
+                    )}
                   </div>
                   <Link href="/predictions">
                     <Button>Faire mes prédictions</Button>
@@ -81,9 +95,12 @@ export default async function DashboardPage() {
             {/* Colonne sidebar */}
             <div className="space-y-6">
               {/* Classement F1 en direct */}
-              {championship && championship.drivers.length > 0 && (
+              {championship && championship.drivers.length > 0 ? (
                 <Card>
-                  <CardHeader title="🏆 Classement F1" description={`${championship.racesCompleted}/${championship.totalRaces} courses`} />
+                  <CardHeader 
+                    title="🏆 Classement F1" 
+                    description={`${championship.racesCompleted}/${championship.totalRaces} courses • ${championship.year}`} 
+                  />
                   <div className="space-y-3">
                     {/* Top 3 Pilotes */}
                     <div>
@@ -128,6 +145,15 @@ export default async function DashboardPage() {
                     <Link href="/standings" className="text-primary hover:text-primary-hover text-sm font-medium">
                       Voir le classement complet →
                     </Link>
+                  </div>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader title="🏆 Classement F1" />
+                  <div className="text-center py-4">
+                    <p className="text-text-muted text-sm">
+                      Le classement sera disponible après les premières courses.
+                    </p>
                   </div>
                 </Card>
               )}

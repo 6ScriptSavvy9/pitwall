@@ -17,6 +17,12 @@ export default async function PredictionsPage() {
     redirect('/login')
   }
 
+  // Nom d'affichage et avatar Google
+  const displayName = user.user_metadata?.full_name?.split(' ')[0] 
+    || user.email?.split('@')[0] 
+    || 'Utilisateur'
+  const avatarUrl = user.user_metadata?.avatar_url || null
+
   // Récupère les données depuis OpenF1
   const [drivers, nextGP] = await Promise.all([
     getDrivers(),
@@ -27,7 +33,8 @@ export default async function PredictionsPage() {
     <PredictionsForm 
       drivers={drivers}
       nextGP={nextGP}
-      userName={user.email?.split('@')[0] || 'Utilisateur'}
+      userName={displayName}
+      userAvatar={avatarUrl}
     />
   )
 }

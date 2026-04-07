@@ -23,10 +23,14 @@ export default async function ProfilePage() {
     redirect('/login')
   }
 
-  const userName = user.email?.split('@')[0] || 'Utilisateur'
+  // Nom d'affichage et avatar Google
+  const displayName = user.user_metadata?.full_name 
+    || user.email?.split('@')[0] 
+    || 'Utilisateur'
+  const avatarUrl = user.user_metadata?.avatar_url || null
 
-  // Récupérer les courses passées depuis OpenF1
-  const pastRaces = await getPastRaces(2026)
+  // Récupérer les courses passées depuis OpenF1 (avec fallback automatique)
+  const pastRaces = await getPastRaces()
   
   // Récupérer seulement les 3 dernières courses pour éviter les rate limits
   const recentRaces = pastRaces.slice(-3).reverse()
@@ -55,7 +59,7 @@ export default async function ProfilePage() {
   
   return (
     <>
-      <Navbar user={{ name: userName, avatarUrl: null }} />
+      <Navbar user={{ name: displayName.split(' ')[0], avatarUrl }} />
       
       <main className="flex-1 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,12 +67,12 @@ export default async function ProfilePage() {
           <Card className="mb-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               <Avatar 
-                name={userName} 
-                src={null}
+                name={displayName} 
+                src={avatarUrl}
                 size="xl"
               />
               <div className="text-center sm:text-left flex-1">
-                <h1 className="text-2xl font-bold text-foreground">{userName}</h1>
+                <h1 className="text-2xl font-bold text-foreground">{displayName}</h1>
                 <p className="text-text-secondary mt-1">Membre depuis {new Date(user.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</p>
                 <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
                   <Badge variant="default">Nouveau membre</Badge>

@@ -17,7 +17,10 @@ export default async function StandingsPage() {
     redirect('/login')
   }
 
-  const userName = user.email?.split('@')[0] || 'Utilisateur'
+  // Nom d'affichage
+  const displayName = user.user_metadata?.full_name?.split(' ')[0] 
+    || user.email?.split('@')[0] 
+    || 'Utilisateur'
 
   // Récupérer le classement complet
   let championship: {
@@ -25,13 +28,14 @@ export default async function StandingsPage() {
     constructors: ConstructorStanding[]
     racesCompleted: number
     totalRaces: number
+    year: number
   }
   
   let currentDrivers: Awaited<ReturnType<typeof getDrivers>> = []
   
   try {
     [championship, currentDrivers] = await Promise.all([
-      getChampionshipSummary(2026),
+      getChampionshipSummary(),
       getDrivers()
     ])
   } catch {
@@ -40,20 +44,24 @@ export default async function StandingsPage() {
       drivers: [],
       constructors: [],
       racesCompleted: 0,
-      totalRaces: 24
+      totalRaces: 24,
+      year: new Date().getFullYear()
     }
   }
   
   return (
     <>
-      <Navbar user={{ name: userName, avatarUrl: null }} />
+      <Navbar user={{ 
+        name: displayName, 
+        avatarUrl: user.user_metadata?.avatar_url || null 
+      }} />
       
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              🏆 Championnat F1 2026
+              🏆 Championnat F1 {championship.year}
             </h1>
             <p className="text-text-secondary mt-1">
               {championship.racesCompleted} courses sur {championship.totalRaces} • Données en direct OpenF1
@@ -135,7 +143,7 @@ export default async function StandingsPage() {
           {currentDrivers.length > 0 && (
             <Card className="mt-6">
               <CardHeader 
-                title="👥 Pilotes 2026" 
+                title={`👥 Pilotes ${championship.year}`}
                 description="Grille actuelle de la Formule 1"
               />
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
