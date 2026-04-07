@@ -3,11 +3,22 @@
  * Pilotes et Constructeurs avec données OpenF1
  */
 import { Navbar, Card, CardHeader } from '@/components/ui'
-import { currentUser } from '@/lib/mock-data'
+import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 import { getChampionshipSummary, getDrivers, type DriverStanding, type ConstructorStanding } from '@/lib/openf1'
 import Link from 'next/link'
 
 export default async function StandingsPage() {
+  // Vérifier l'authentification
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    redirect('/login')
+  }
+
+  const userName = user.email?.split('@')[0] || 'Utilisateur'
+
   // Récupérer le classement complet
   let championship: {
     drivers: DriverStanding[]
@@ -35,7 +46,7 @@ export default async function StandingsPage() {
   
   return (
     <>
-      <Navbar user={{ name: currentUser.username, avatarUrl: currentUser.avatarUrl }} />
+      <Navbar user={{ name: userName, avatarUrl: null }} />
       
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

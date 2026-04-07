@@ -7,34 +7,31 @@
 import { useState } from 'react'
 import { Navbar, Card, CardHeader, Button } from '@/components/ui'
 import type { OpenF1Driver, OpenF1Meeting } from '@/lib/openf1/types'
-import type { User, Prediction } from '@/types'
 
 interface PredictionsFormProps {
   drivers: OpenF1Driver[]
   nextGP: OpenF1Meeting | null
-  currentUser: User
-  currentPredictions: Partial<Prediction>
+  userName: string
 }
 
 export function PredictionsForm({ 
   drivers, 
   nextGP, 
-  currentUser,
-  currentPredictions 
+  userName
 }: PredictionsFormProps) {
-  // État local pour les prédictions
+  // État local pour les prédictions (vide par défaut)
   const [predictions, setPredictions] = useState({
-    winner: currentPredictions.winner || '',
-    podium: currentPredictions.podium || ['', '', ''],
-    pole: currentPredictions.pole || '',
-    fastestLap: currentPredictions.fastestLap || '',
-    safetyCar: currentPredictions.safetyCar,
-    seasonTop5: currentPredictions.seasonTop5 || ['', '', '', '', ''],
+    winner: '',
+    podium: ['', '', ''] as [string, string, string],
+    pole: '',
+    fastestLap: '',
+    safetyCar: null as boolean | null,
+    seasonTop5: ['', '', '', '', ''],
   })
 
   const handleSubmit = () => {
-    // Simulation de soumission
-    alert('Prédictions enregistrées ! (simulation)')
+    // TODO: Sauvegarder dans Supabase
+    alert('Prédictions enregistrées ! (fonctionnalité à venir)')
   }
 
   // Trier les pilotes par nom
@@ -44,7 +41,7 @@ export function PredictionsForm({
 
   return (
     <>
-      <Navbar user={{ name: currentUser.username, avatarUrl: currentUser.avatarUrl }} />
+      <Navbar user={{ name: userName, avatarUrl: null }} />
       
       <main className="flex-1 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -4,10 +4,19 @@
  * Récupère les pilotes depuis OpenF1
  */
 import { getDrivers, getNextMeeting } from '@/lib/openf1'
-import { currentUser, currentPredictions } from '@/lib/mock-data'
+import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 import { PredictionsForm } from './predictions-form'
 
 export default async function PredictionsPage() {
+  // Vérifier l'authentification
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    redirect('/login')
+  }
+
   // Récupère les données depuis OpenF1
   const [drivers, nextGP] = await Promise.all([
     getDrivers(),
@@ -18,8 +27,7 @@ export default async function PredictionsPage() {
     <PredictionsForm 
       drivers={drivers}
       nextGP={nextGP}
-      currentUser={currentUser}
-      currentPredictions={currentPredictions}
+      userName={user.email?.split('@')[0] || 'Utilisateur'}
     />
   )
 }

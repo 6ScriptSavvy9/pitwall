@@ -6,8 +6,6 @@
 import { Button, Navbar } from '@/components/ui'
 import { Countdown } from '@/components/features/countdown'
 import { FeatureCard } from '@/components/features/feature-card'
-import { LeaderboardTeaser } from '@/components/features/leaderboard-teaser'
-import { globalLeaderboard } from '@/lib/mock-data'
 import { getNextMeeting } from '@/lib/openf1'
 import Link from 'next/link'
 
@@ -117,17 +115,19 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              {/* Leaderboard Teaser */}
-              <div>
-                <LeaderboardTeaser entries={globalLeaderboard} />
-                <div className="mt-4 text-center">
-                  <Link 
-                    href="/leaderboard" 
-                    className="text-primary hover:text-primary-hover text-sm font-medium"
-                  >
-                    Voir le classement complet →
-                  </Link>
-                </div>
+              {/* CTA pour rejoindre */}
+              <div className="bg-surface rounded-2xl border border-border p-8 text-center">
+                <h3 className="text-xl font-bold text-foreground mb-2">
+                  🏆 Classement global
+                </h3>
+                <p className="text-text-secondary mb-6">
+                  Rejoins PitWall pour voir le classement et affronter d&apos;autres fans de F1.
+                </p>
+                <Link href="/dashboard">
+                  <Button variant="primary">
+                    Voir le classement
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
